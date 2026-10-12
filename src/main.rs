@@ -1,10 +1,11 @@
 mod audio;
 mod config;
 mod selector;
+mod setup;
 mod tray;
 
 use anyhow::{bail, Context, Result};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use std::sync::mpsc::TryRecvError;
@@ -19,8 +20,11 @@ use tray::{Mode, Status, UiCommand};
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
+
     /// Path to the TOML config (default: mic-hopper.toml next to the exe, then cwd).
-    #[arg(short, long)]
+    #[arg(short, long, global = true)]
     config: Option<PathBuf>,
 
     /// List audio devices and exit.
@@ -38,6 +42,12 @@ struct Cli {
     /// Run without a tray icon.
     #[arg(long)]
     no_tray: bool,
+}
+
+#[derive(Subcommand, Debug)]
+enum Command {
+    /// Interactively choose devices and write the config file.
+    Setup,
 }
 
 const TICK: Duration = Duration::from_millis(10);
@@ -95,28 +105,30 @@ impl InputSlot {
     }
 }
 
+/// Candidate config locations in priority order: `--config`, else next to the
+/// exe, then the current directory.
+fn config_candidates(cli: &Cli) -> Vec<PathBuf> {
+    if let Some(p) = &cli.config {
+        return vec![p.clone()];
+    }
+    let exe_dir = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.to_path_buf()));
+    exe_dir
+        .iter()
+        .map(|d| d.join("mic-hopper.toml"))
+        .chain(std::iter::once(PathBuf::from("mic-hopper.toml")))
+        .collect()
+}
+
 fn resolve_config_path(cli: &Cli) -> Result<PathBuf> {
-    let candidates: Vec<PathBuf> = if let Some(p) = &cli.config {
-        vec![p.clone()]
-    } else {
-        let exe_dir = std::env::current_exe()
-            .ok()
-            .and_then(|p| p.parent().map(|d| d.to_path_buf()));
-        exe_dir
-            .iter()
-            .map(|d| d.join("mic-hopper.toml"))
-            .chain(std::iter::once(PathBuf::from("mic-hopper.toml")))
-            .collect()
-    };
+    let candidates = config_candidates(cli);
     if let Some(found) = candidates.iter().find(|p| p.exists()) {
         return Ok(found.clone());
     }
-    // Nothing found: write a template in the first candidate location.
-    let target = candidates[0].clone();
-    Config::write_template(&target)?;
     bail!(
-        "no config found; wrote a template to {}.\nRun `mic-hopper --list-devices`, fill in [devices], then start again.",
-        target.display()
+        "no config found at {}.\nRun `mic-hopper setup` to create one interactively.",
+        candidates[0].display()
     );
 }
 
@@ -142,6 +154,17 @@ fn main() -> Result<()> {
 
     if cli.list_devices {
         return print_devices(&host);
+    }
+
+    if let Some(Command::Setup) = cli.command {
+        // Prefer an existing config location; otherwise create next to the exe.
+        let candidates = config_candidates(&cli);
+        let path = candidates
+            .iter()
+            .find(|p| p.exists())
+            .unwrap_or(&candidates[0])
+            .clone();
+        return setup::run(&host, &path);
     }
 
     let cfg_path = resolve_config_path(&cli)?;

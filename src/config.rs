@@ -140,11 +140,6 @@ impl Config {
         Ok(cfg)
     }
 
-    pub fn write_template(path: &Path) -> Result<()> {
-        std::fs::write(path, DEFAULT_CONFIG_TOML)
-            .with_context(|| format!("writing config template {}", path.display()))
-    }
-
     fn validate(&self) -> Result<()> {
         let s = &self.switching;
         anyhow::ensure!(
