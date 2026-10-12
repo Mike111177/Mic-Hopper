@@ -2,6 +2,7 @@ mod audio;
 mod config;
 mod selector;
 mod setup;
+mod single_instance;
 mod tray;
 
 use anyhow::{bail, Context, Result};
@@ -166,6 +167,16 @@ fn main() -> Result<()> {
             .clone();
         return setup::run(&host, &path);
     }
+
+    // One running instance system-wide; two would both write to the cable.
+    let _instance_lock = match single_instance::acquire()? {
+        Some(lock) => lock,
+        None => {
+            let msg = "Mic Hopper is already running. Quit it from the tray icon first.";
+            single_instance::error_dialog("Mic Hopper", msg);
+            bail!("{msg}");
+        }
+    };
 
     let cfg_path = resolve_config_path(&cli)?;
     let cfg = Config::load(&cfg_path)?;
