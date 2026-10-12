@@ -1,0 +1,28 @@
+[package]
+name = "mic-hopper"
+version = "0.1.0"
+edition = "2021"
+description = "Routes one of two microphones to a virtual mic based on a volume heuristic"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "~4.5", features = ["derive"] }
+cpal = "0.15"
+env_logger = "0.11"
+log = "0.4"
+rtrb = "0.3"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+tray-icon = "0.19"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_System_Console",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
