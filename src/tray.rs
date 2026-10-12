@@ -99,7 +99,7 @@ fn tooltip(s: &Status) -> String {
     };
     let flag = |ok: bool| if ok { "" } else { " (offline)" };
     format!(
-        "Mic Hopper: {active} [{mode}]\nDesktop {:.0} dB{}  Headset {:.0} dB{}\ndiff {:+.1} dB",
+        "Mike Hopper: {active} [{mode}]\nDesktop {:.0} dB{}  Headset {:.0} dB{}\ndiff {:+.1} dB",
         s.desktop_db,
         flag(s.desktop_ok),
         s.headset_db,
@@ -145,7 +145,7 @@ fn run(status_rx: Receiver<Status>, cmd_tx: Sender<UiCommand>, ready_tx: Sender<
         .and_then(|_| {
             TrayIconBuilder::new()
                 .with_menu(Box::new(menu))
-                .with_tooltip("Mic Hopper: starting")
+                .with_tooltip("Mike Hopper: starting")
                 .with_icon(make_icon(None, false))
                 .build()
                 .context("creating tray icon")

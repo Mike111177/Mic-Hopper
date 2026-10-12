@@ -1084,7 +1084,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mic-hopper"
+name = "mike-hopper"
 version = "0.1.0"
 dependencies = [
  "anyhow",

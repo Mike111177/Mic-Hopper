@@ -16,7 +16,7 @@ pub fn acquire() -> Result<Option<InstanceLock>> {
     use windows_sys::Win32::System::Threading::CreateMutexW;
 
     // `Global\` spans all logon sessions on the machine.
-    let name: Vec<u16> = "Global\\MicHopper.SingleInstance"
+    let name: Vec<u16> = "Global\\MikeHopper.SingleInstance"
         .encode_utf16()
         .chain(std::iter::once(0))
         .collect();

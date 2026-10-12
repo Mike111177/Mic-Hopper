@@ -24,7 +24,7 @@ struct Cli {
     #[command(subcommand)]
     command: Option<Command>,
 
-    /// Path to the TOML config (default: mic-hopper.toml next to the exe, then cwd).
+    /// Path to the TOML config (default: mike-hopper.toml next to the exe, then cwd).
     #[arg(short, long, global = true)]
     config: Option<PathBuf>,
 
@@ -117,8 +117,8 @@ fn config_candidates(cli: &Cli) -> Vec<PathBuf> {
         .and_then(|p| p.parent().map(|d| d.to_path_buf()));
     exe_dir
         .iter()
-        .map(|d| d.join("mic-hopper.toml"))
-        .chain(std::iter::once(PathBuf::from("mic-hopper.toml")))
+        .map(|d| d.join("mike-hopper.toml"))
+        .chain(std::iter::once(PathBuf::from("mike-hopper.toml")))
         .collect()
 }
 
@@ -128,7 +128,7 @@ fn resolve_config_path(cli: &Cli) -> Result<PathBuf> {
         return Ok(found.clone());
     }
     bail!(
-        "no config found at {}.\nRun `mic-hopper setup` to create one interactively.",
+        "no config found at {}.\nRun `mike-hopper setup` to create one interactively.",
         candidates[0].display()
     );
 }
@@ -172,8 +172,8 @@ fn main() -> Result<()> {
     let _instance_lock = match single_instance::acquire()? {
         Some(lock) => lock,
         None => {
-            let msg = "Mic Hopper is already running. Quit it from the tray icon first.";
-            single_instance::error_dialog("Mic Hopper", msg);
+            let msg = "Mike Hopper is already running. Quit it from the tray icon first.";
+            single_instance::error_dialog("Mike Hopper", msg);
             bail!("{msg}");
         }
     };

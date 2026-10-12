@@ -71,7 +71,7 @@ pub fn run(host: &cpal::Host, path: &Path) -> Result<()> {
     println!("  desktop = {desktop_name}");
     println!("  headset = {headset_name}");
     println!("  output  = {output_name}");
-    println!("\nNext: run `mic-hopper --monitor` to calibrate desktop_offset_db, then `mic-hopper`.");
+    println!("\nNext: run `mike-hopper --monitor` to calibrate desktop_offset_db, then `mike-hopper`.");
     Ok(())
 }
 

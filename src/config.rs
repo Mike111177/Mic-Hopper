@@ -4,10 +4,10 @@ use std::path::Path;
 
 /// Template written on first run. It doubles as the source of default values
 /// (see `Config::default`), so it must always parse.
-pub const DEFAULT_CONFIG_TOML: &str = r#"# Mic Hopper configuration
+pub const DEFAULT_CONFIG_TOML: &str = r#"# Mike Hopper configuration
 #
 # Device names are matched as case-insensitive substrings against the names
-# printed by `mic-hopper --list-devices`.
+# printed by `mike-hopper --list-devices`.
 #
 # `output` must be the *playback* side of a virtual audio cable
 # (e.g. "CABLE Input (VB-Audio Virtual Cable)"). Point your chat app's
@@ -34,7 +34,7 @@ crossfade_ms = 15
 start_with = "desktop"
 
 # Calibration: added to the desktop mic level before comparing it with the
-# headset. Run `mic-hopper --monitor`, sit at your normal "near" position,
+# headset. Run `mike-hopper --monitor`, sit at your normal "near" position,
 # talk, and set this so the printed `diff` hovers around 0 dB.
 desktop_offset_db = 0.0
 

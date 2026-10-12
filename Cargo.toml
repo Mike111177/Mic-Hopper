@@ -1,5 +1,5 @@
 [package]
-name = "mic-hopper"
+name = "mike-hopper"
 version = "0.1.0"
 edition = "2021"
 description = "Routes one of two microphones to a virtual mic based on a volume heuristic"
