@@ -239,16 +239,3 @@ fn pump_messages() {
 
 #[cfg(not(windows))]
 fn pump_messages() {}
-
-/// Hide the console window this process was started with (Windows only).
-pub fn hide_console() {
-    #[cfg(windows)]
-    unsafe {
-        use windows_sys::Win32::System::Console::GetConsoleWindow;
-        use windows_sys::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE};
-        let hwnd = GetConsoleWindow();
-        if !hwnd.is_null() {
-            ShowWindow(hwnd, SW_HIDE);
-        }
-    }
-}

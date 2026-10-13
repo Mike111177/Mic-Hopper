@@ -48,8 +48,8 @@ impl Drop for InstanceLock {
     }
 }
 
-/// Show a modal error dialog (Windows only); useful when there is no console
-/// to read, e.g. when launched from a Startup shortcut.
+/// Show a modal error dialog (Windows only); used when there is no console
+/// to print to, e.g. when launched from the Startup shortcut.
 pub fn error_dialog(title: &str, text: &str) {
     #[cfg(windows)]
     {

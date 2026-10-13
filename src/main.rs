@@ -1,5 +1,10 @@
+// No console window is created for the tray app; CLI modes attach to the
+// launching terminal or open their own window (see `console`).
+#![cfg_attr(windows, windows_subsystem = "windows")]
+
 mod audio;
 mod config;
+mod console;
 mod selector;
 mod setup;
 mod single_instance;
@@ -36,7 +41,7 @@ struct Cli {
     #[arg(short, long)]
     monitor: bool,
 
-    /// Keep the console window visible.
+    /// Print logs to the terminal this was launched from.
     #[arg(long)]
     console: bool,
 
@@ -146,11 +151,48 @@ fn print_devices(host: &cpal::Host) -> Result<()> {
     Ok(())
 }
 
-fn main() -> Result<()> {
+fn main() {
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            // --help, --version, or a usage error: make sure it lands somewhere.
+            if !console::attach() {
+                console::own();
+            }
+            let _ = e.print();
+            console::pause_if_owned();
+            std::process::exit(e.exit_code());
+        }
+    };
+
+    if matches!(cli.command, Some(Command::Setup)) {
+        // Interactive: a dedicated window, so stdin isn't shared with a shell prompt.
+        console::own();
+    } else if cli.list_devices || cli.monitor || cli.console {
+        if !console::attach() {
+            console::own();
+        }
+    }
+
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
         .format_timestamp_millis()
         .init();
-    let cli = Cli::parse();
+
+    let result = run(cli);
+    if let Err(e) = &result {
+        if console::available() {
+            eprintln!("error: {e:#}");
+        } else {
+            single_instance::error_dialog("Mike Hopper", &format!("{e:#}"));
+        }
+    }
+    console::pause_if_owned();
+    if result.is_err() {
+        std::process::exit(1);
+    }
+}
+
+fn run(cli: Cli) -> Result<()> {
     let host = cpal::default_host();
 
     if cli.list_devices {
@@ -171,11 +213,7 @@ fn main() -> Result<()> {
     // One running instance system-wide; two would both write to the cable.
     let _instance_lock = match single_instance::acquire()? {
         Some(lock) => lock,
-        None => {
-            let msg = "Mike Hopper is already running. Quit it from the tray icon first.";
-            single_instance::error_dialog("Mike Hopper", msg);
-            bail!("{msg}");
-        }
+        None => bail!("Mike Hopper is already running. Quit it from the tray icon first."),
     };
 
     let cfg_path = resolve_config_path(&cli)?;
@@ -208,10 +246,6 @@ fn main() -> Result<()> {
     } else {
         Some(tray::spawn(status_rx).context("starting tray icon")?)
     };
-
-    if !cli.console && !cli.monitor {
-        tray::hide_console();
-    }
 
     let mut selector = Selector::new(cfg.switching.clone(), start);
     let mut mode = Mode::Auto;
